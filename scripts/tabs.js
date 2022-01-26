@@ -1,7 +1,7 @@
 import UI from './view';
 
 export default function initTabs() {
-	UI.tabsBtns.forEach((btn) => {
+	UI.tabsBtns.forEach(btn => {
 		btn.addEventListener('click', clickBtnTab);
 	});
 
@@ -13,7 +13,7 @@ export default function initTabs() {
 	}
 
 	function showSelectedItem(selector, target) {
-		selector.forEach((elem) => {
+		selector.forEach(elem => {
 			elem.classList.remove('active');
 
 			if (elem.dataset.tab === target) {
