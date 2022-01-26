@@ -1,18 +1,7 @@
+import { format, fromUnixTime } from 'date-fns';
 import UI from './view';
 import Storage from './storage';
 import initTabs from './tabs';
-
-// // import { format } from 'date-fns';
-// import { format, formatDistance, formatRelative, subDays } from 'date-fns'
-
-// console.log(format(new Date(), "'Today is a' eeee"));
-// //=> "Today is a Tuesday"
-
-// console.log(formatDistance(subDays(new Date(), 3), new Date(), { addSuffix: true }));
-// //=> "3 days ago"
-
-// console.log(formatRelative(subDays(new Date(), 3), new Date()));
-// //=> "last Friday at 7:26 p.m."
 
 const URLS = {
 	SERVER: 'https://api.openweathermap.org/data/2.5/weather',
@@ -25,6 +14,9 @@ const SYMBOL_DEGREE = '\u00B0';
 const SYMBOL_CROSS = '&#128473;';
 const ICON_SIZE_SMALL = '2x';
 const ICON_SIZE_LARGE = '4x';
+
+const dateNow = new Date();
+const currentTZOffsetInUnix = dateNow.getTimezoneOffset() * 60;
 
 const favoriteCities = Storage.getFavoriteCities();
 const favorites = Object.keys(favoriteCities).length === 0 ? [] : favoriteCities;
@@ -67,10 +59,10 @@ function addToFavoritesCity(cityName) {
 	renderFavoriteItems(favoritesSet);
 }
 
-function renderFavoriteItems(favorites) {
+function renderFavoriteItems(favors) {
 	UI.locationsList.innerHTML = '';
 
-	favorites.forEach((city) => {
+	favors.forEach(city => {
 		UI.locationsList.append(createFavoriteItem(city));
 	});
 }
@@ -108,8 +100,8 @@ function createForecastCard(forecast) {
 	div.className = 'forecast__card';
 	div.innerHTML = `
 		<div class="forecast__dateTime-wrapper">
-			<div class="forecast__date">${forecast.date.day} ${forecast.date.month}</div>
-			<div class="forecast__time">${forecast.time.hours}:${forecast.time.minutes}</div>
+			<div class="forecast__date">${forecast.date}</div>
+			<div class="forecast__time">${forecast.time}</div>
 		</div>
 		<div class="forecast__info-wrapper">
 			<div class="forecast__info__temperature">
@@ -136,11 +128,11 @@ function submitForm(event) {
 }
 
 function showAllWeather(city) {
-	const url = `${URLS.SERVER}?q=${city}&units=${UTIL_TO_API}&appid=${API_KEY}`;
+	const urlW = `${URLS.SERVER}?q=${city}&units=${UTIL_TO_API}&appid=${API_KEY}`;
 	const urlForecast = `${URLS.SERVER_FORECAST}?q=${city}&units=${UTIL_TO_API}&appid=${API_KEY}`;
 
-	fetch(url)
-		.then((response) => {
+	fetch(urlW)
+		.then(response => {
 			if (response.ok) {
 				return response.json();
 			}
@@ -148,16 +140,16 @@ function showAllWeather(city) {
 				`${response.status === 404 ? 'Not found' : response.status}`,
 			);
 		})
-		.then((data) => {
+		.then(data => {
 			setDataWeatherNow(data);
 			setDataWeatherDetails(data);
 			Storage.setCurrentCity(data.name);
 		})
 		.catch(alert);
 
-	async function getForecast(url) {
+	async function getForecast(urlF) {
 		try {
-			const response = await fetch(url);
+			const response = await fetch(urlF);
 			if (response.ok) {
 				const data = await response.json();
 				setDataWeatherForecast(data);
@@ -181,10 +173,8 @@ function setDataWeatherNow(data) {
 	};
 	const urlIcon = `${URLS.SERVER_ICON}${dataNow.iconCode}@${ICON_SIZE_LARGE}.png`;
 
-	UI.temperature.forEach(
-		(item) => (item.textContent = `${dataNow.temp}${SYMBOL_DEGREE}`),
-	);
-	UI.location.forEach((item) => (item.textContent = `${dataNow.city}`));
+	UI.temperature.forEach(item => (item.textContent = `${dataNow.temp}${SYMBOL_DEGREE}`));
+	UI.location.forEach(item => (item.textContent = `${dataNow.city}`));
 	UI.weatherIcon.src = urlIcon;
 
 	if (favorites.includes(dataNow.city)) {
@@ -198,39 +188,24 @@ function setDataWeatherDetails(data) {
 	const dataDetails = {
 		feelsLike: Math.round(data.main.feels_like),
 		weather: data.weather[0].main,
-		sunrise: {
-			hours: minTwoDigits(new Date(data.sys.sunrise * 1000).getHours()),
-			minutes: minTwoDigits(new Date(data.sys.sunrise * 1000).getMinutes()),
-		},
-		sunset: {
-			hours: minTwoDigits(new Date(data.sys.sunset * 1000).getHours()),
-			minutes: minTwoDigits(new Date(data.sys.sunset * 1000).getMinutes()),
-		},
+		sunrise: format(fromUnixTime(data.sys.sunrise + currentTZOffsetInUnix + data.timezone), 'HH:mm'),
+		sunset: format(fromUnixTime(data.sys.sunset + currentTZOffsetInUnix + data.timezone), 'HH:mm'),
 	};
 
 	UI.DETAILS.feelsLike.textContent = `${dataDetails.feelsLike}${SYMBOL_DEGREE}`;
 	UI.DETAILS.weather.textContent = dataDetails.weather;
-	UI.DETAILS.sunrise.textContent = `${dataDetails.sunrise.hours}:${dataDetails.sunrise.minutes}`;
-	UI.DETAILS.sunset.textContent = `${dataDetails.sunset.hours}:${dataDetails.sunset.minutes}`;
+	UI.DETAILS.sunrise.textContent = `${dataDetails.sunrise}`;
+	UI.DETAILS.sunset.textContent = `${dataDetails.sunset}`;
 }
 
 function setDataWeatherForecast(data) {
-	const forecastList = data.list.splice(0, 7);
-
+	const forecastList = data.list.slice(0, 7); // use part the list of forecast
 	UI.FORECAST_CARDS.innerHTML = '';
 
-	forecastList.forEach((forecastItem) => {
+	forecastList.forEach(forecastItem => {
 		const dataForecast = {
-			date: {
-				day: new Date(forecastItem.dt * 1000).getDate(),
-				month: new Date(forecastItem.dt * 1000).toLocaleString('en-US', {
-					month: 'long',
-				}),
-			},
-			time: {
-				hours: minTwoDigits(new Date(forecastItem.dt * 1000).getHours()),
-				minutes: minTwoDigits(new Date(forecastItem.dt * 1000).getMinutes()),
-			},
+			date: format(fromUnixTime(forecastItem.dt + currentTZOffsetInUnix + data.city.timezone), 'dd MMMM'),
+			time: format(fromUnixTime(forecastItem.dt + currentTZOffsetInUnix + data.city.timezone), 'HH:mm'),
 			temperature: Math.round(forecastItem.main.temp),
 			feelsLike: Math.round(forecastItem.main.feels_like),
 			weather: forecastItem.weather[0].main,
@@ -240,8 +215,4 @@ function setDataWeatherForecast(data) {
 		const forecastCard = createForecastCard(dataForecast);
 		UI.FORECAST_CARDS.append(forecastCard);
 	});
-}
-
-function minTwoDigits(num) {
-	return (num < 10 ? '0' : '') + num;
 }
