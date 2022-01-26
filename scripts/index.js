@@ -18,8 +18,7 @@ const ICON_SIZE_LARGE = '4x';
 const dateNow = new Date();
 const currentTZOffsetInUnix = dateNow.getTimezoneOffset() * 60;
 
-const favoriteCities = Storage.getFavoriteCities();
-const favorites = Object.keys(favoriteCities).length === 0 ? [] : favoriteCities;
+const favorites = Storage.getFavoriteCities() || [];
 const currentCity = Storage.getCurrentCity() || 'Minsk';
 
 const favoritesSet = new Set(favorites);
