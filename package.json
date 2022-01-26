@@ -1,0 +1,31 @@
+{
+  "name": "weather-app",
+  "version": "1.0.0",
+  "description": "weather app with npm",
+  "main": "index.js",
+  "source": "index.html",
+  "scripts": {
+    "test": "test.js",
+    "start": "parcel",
+    "build": "parcel build"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Dauhaliavets/WeatherApp-with-npm.git"
+  },
+  "author": "DauhaliavetsDzmitry",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/Dauhaliavets/WeatherApp-with-npm/issues"
+  },
+  "homepage": "https://github.com/Dauhaliavets/WeatherApp-with-npm#readme",
+  "dependencies": {
+    "date-fns": "^2.28.0"
+  },
+  "devDependencies": {
+    "eslint": "^8.7.0",
+    "eslint-config-airbnb-base": "^15.0.0",
+    "eslint-plugin-import": "^2.25.4",
+    "parcel": "^2.2.1"
+  }
+}
