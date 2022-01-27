@@ -1,4 +1,5 @@
 import { format, fromUnixTime } from 'date-fns';
+import Cookies from 'js-cookie';
 import UI from './view';
 import Storage from './storage';
 import initTabs from './tabs';
@@ -19,7 +20,7 @@ const dateNow = new Date();
 const currentTZOffsetInUnix = dateNow.getTimezoneOffset() * 60;
 
 const favorites = Storage.getFavoriteCities() || [];
-const currentCity = Storage.getCurrentCity() || 'Minsk';
+const currentCity = Cookies.get('currentCity') || 'Minsk';
 
 const favoritesSet = new Set(favorites);
 
@@ -80,11 +81,11 @@ function createFavoriteItem(cityName) {
 
 	locationLink.addEventListener('click', () => {
 		showAllWeather(cityName);
-		Storage.setCurrentCity(cityName);
+		Cookies.set('currentCity', cityName);
 	});
 	locationCloseBtn.addEventListener('click', () => {
 		removeFavoriteCity(cityName);
-		if (cityName === Storage.getCurrentCity()) {
+		if (cityName === Cookies.get('currentCity')) {
 			UI.likeIcon.classList.remove('active');
 		}
 	});
@@ -142,7 +143,7 @@ function showAllWeather(city) {
 		.then(data => {
 			setDataWeatherNow(data);
 			setDataWeatherDetails(data);
-			Storage.setCurrentCity(data.name);
+			Cookies.set('currentCity', data.name);
 		})
 		.catch(alert);
 
